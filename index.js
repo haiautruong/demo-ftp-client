@@ -2,13 +2,18 @@
 var net = require("net");
 const FTP = require("jsftp");
 
-// const USER = "haiau123";
-// const PASSWORD = "123";
-// const HOST = 'localhost';
+const USER = "haiau123";
+const PASSWORD = "123";
+const HOST = 'localhost';
 
-const USER = 'haiau123';
-const PASSWORD = "haiau@@123";
-const HOST = 'ftp.drivehq.com';
+// const USER = 'dung123';
+// const PASSWORD = "dung@@123";
+// const HOST = 'ftp.drivehq.com';
+
+// const USER = 'haiau762';
+// const PASSWORD = "haiau@@123";
+// // const HOST = 'files.000webhost.com';
+// const HOST = 'ftp.drivehq.com';
 const POST = 21;
 
 let currTime = 0;
@@ -49,9 +54,9 @@ function disconnect(ftp) {
 function getList() {
   return new Promise((resolve, reject) => {
     let ftp = connect();
-    console.log('ftp-----------------', ftp);
-    ftp.ls('GroupRead/*' + 'au' + "*.txt", (err, res) => {
-      console.log('res--------------------', res);
+    // console.log('ftp-----------------', ftp);
+    ftp.ls('test/*' + 'au' + "*.txt", (err, res) => {
+      // console.log('res--------------------', res);
       console.log('err--------------------', err);
       if (err) {
         reject(err);
@@ -59,8 +64,21 @@ function getList() {
       else {
         res.sort(compare);
         resolve(res);
-        // disconnect(ftp);
+        disconnect(ftp);
       }
+    })
+  })
+}
+
+function downAndSaveFile(filename) {
+  return new Promise((resolve, reject) => {
+    let ftp = connect();
+    ftp.get("test/" + filename, "result.txt", (err) => {
+      if (err) {
+        console.log('err', err);
+        reject(err);
+      }
+      disconnect(ftp);
     })
   })
 }
@@ -68,26 +86,30 @@ function getList() {
 function downFile(filename) {
   return new Promise((resolve, reject) => {
     let ftp = connect();
-    console.log('connected!!!!!!!!!!!');
-    ftp.get("GroupRead/" + filename, (err, socket) => {
+    ftp.get("test/" + filename, (err, socket) => {
       if (err) {
         console.log('err', err);
         reject(err);
       }
       else {
-        socket.on("data", d => {
+        let alldata = "";
 
-          d = d.toString();
-          resolve(d);
+        socket.on("data", d => {
+          
+          alldata += d.toString();
         });
+
         socket.on("close", hadErr => {
 
           if (hadErr) {
             reject(hadErr)
           }
+          else{
+            resolve(alldata);
+          }
         });
         socket.resume();
-        // disconnect(ftp);
+        disconnect(ftp);
       }
     })
   })
@@ -95,14 +117,21 @@ function downFile(filename) {
 
 function downloadFile() {
   getList().then(listFile => {
-    console.log('listFile-------------------', listFile);
-    listFile.map(file => {
+    // console.log('listFile-------------------', listFile);
+    // listFile.map(file => {
+    //   downFile(file.name).then(data => {
+    //     console.log('updated data', data.split('\r\n'));
+    //   });
+    // })
+
+    listFile.forEach(file => {
+      let arrayData = null;
       downFile(file.name).then(data => {
-        console.log('data', data);
-        console.log('typeof data', typeof data);
-        console.log('updated data', data.split('\n'));
-      });
-    })
+        arrayData = data.split('\r\n');
+        console.log(arrayData);
+      })
+    });
+    // downAndSaveFile('haiau2.txt');
   }).catch(err => {
     console.log(err);
   })
